@@ -1,37 +1,51 @@
 package main
 
 import (
-    "fmt"
-    "strconv"
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+
+	"github.com/bettinson/stack-calculator/stack"
 )
 
 func main() {
-    str := "1 2 + 4 * 5 + 3 -"
-    operandStack := makeOperandStackFromString(str)
-    numberStack := makeNumberStackFromString(str)
-    fmt.Println(numberStack)
-    fmt.Println(operandStack)
-
-}
-
-func makeNumberStackFromString(s string) []int{
-    var numberStack []int
-    for _, value := range s {
-        if _, err := strconv.Atoi(string(value)); err == nil {                                                                                                                 
-            numberStack = append(numberStack, int(value))
-            fmt.Println(string(value))
-        }
-    }
-    return numberStack
-}
-
-func makeOperandStackFromString(s string) []string {
-	var operandStack []string
-	for _, value := range s {
-		if value == '+' || value == '-' || value == '*' || value == '/' {
-			operandStack = append(operandStack, string(value))
-			fmt.Println(string(value))
-		} 
+	s := stack.New()
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("Enter text: ")
+		operandString, _ := reader.ReadString('\n')
+		operandString = operandString[:len(operandString)-1]
+		if operandString == "+" || operandString == "-" || operandString == "*" || operandString == "/" {
+			firstVal, firstErr := s.Pop()
+			secondVal, secondErr := s.Pop()
+			if firstErr != nil || secondErr != nil {
+				log.Fatal(firstErr, secondErr)
+			}
+			var result int
+			switch {
+			case operandString == "+":
+				result = firstVal + secondVal
+			case operandString == "-":
+				result = firstVal - secondVal
+			case operandString == "*":
+				result = firstVal * secondVal
+			case operandString == "/":
+				result = firstVal / secondVal
+			default:
+				log.Fatal()
+			}
+			fmt.Println(result)
+			s.Push(result)
+			continue
+		}
+		if operandString[0] >= '0' || operandString[0] <= '9' {
+			operandInt, err := strconv.Atoi(operandString[:])
+			if err != nil {
+				log.Fatal(err)
+			}
+			s.Push(operandInt)
+		}
 	}
-	return operandStack
 }
